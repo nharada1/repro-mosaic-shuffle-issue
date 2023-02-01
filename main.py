@@ -2,6 +2,7 @@ from typing import Any
 from ast import literal_eval as make_tuple
 
 import torch
+import tempfile
 
 from torch.utils.data import DataLoader
 from torchvision import transforms
@@ -37,26 +38,27 @@ class FMOWStreamingDataset(StreamingDataset):
 
 
 def main():
-    dataset = FMOWStreamingDataset(
-        local="/tmp/datasets/testing",
-        remote="~/Datasets/mosaic/test_sets/fmow_full",
-        split="val",
-        transform=transforms.Compose(
-            [
-                transforms.ToTensor(),
-                transforms.Resize(256),
-                transforms.RandomCrop((256, 256)),
-            ]
-        ),
-    )
-    dataloader = DataLoader(
-        dataset=dataset,
-        batch_size=32,
-    )
+    with tempfile.TemporaryDirectory() as tmp:
+        print(f"Saving data to {tmp}")
+        dataset = FMOWStreamingDataset(
+            local=tmp,
+            remote="/home/nharada/Datasets/mosaic/test_sets/fmow_full",
+            split="val",
+            transform=transforms.Compose(
+                [
+                    transforms.ToTensor(),
+                    transforms.Resize(256),
+                    transforms.RandomCrop((256, 256)),
+                ]
+            ),
+        )
+        dataloader = DataLoader(
+            dataset=dataset,
+            batch_size=32,
+        )
 
-    for data, label, filename in dataloader:
-        print(data)
-        break
+        for idx, (data, label, filename) in enumerate(dataloader):
+            print(idx)
 
 if __name__ == "__main__":
     main()
